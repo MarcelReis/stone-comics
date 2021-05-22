@@ -1,8 +1,8 @@
 {
   "name": "function",
   "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
+  "private": true,
+  "author": "Marcelo Reis <oi@marcelreis.dev>",
   "scripts": {
     "start": "babel-node ./src/index.js",
     "build": "babel ./src/index.js -d build"

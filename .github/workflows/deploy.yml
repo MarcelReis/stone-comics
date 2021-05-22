@@ -1,0 +1,47 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Set node version
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+
+      - name: Install dependencies
+        run: npx lerna bootstrap
+
+      - name: Lint
+        run: lerna run lint --parallel
+
+      - name: Test
+        run: lerna run test:coverage --parallel
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./packages/app/coverage/clover.xml
+
+      - name: Build packages
+        run: npx lerna run build --parallel
+
+      - name: Zip Lambda
+        run: cd packages/function/build/ && zip ../../../function.zip **
+
+      - name: Deploy AWS Lambda
+        uses: appleboy/lambda-action@master
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: stone-comics
+          zip_file: function.zip
